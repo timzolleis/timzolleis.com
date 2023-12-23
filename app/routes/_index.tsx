@@ -11,7 +11,7 @@ import { AnimatedText } from '~/components/animated-text'
 import { useEffect } from 'react'
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'New Remix App' }, { name: 'description', content: 'Welcome to Remix!' }]
+  return [{ title: 'timzolleis.com' }, { name: 'description', content: 'Builing applications of the future.' }]
 }
 
 function useCommand() {
