@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react'
+import { ReactNode, RefObject, useEffect, useState } from 'react'
 
 export const Terminal = ({ children }: { children: ReactNode }) => {
   return (
@@ -21,6 +21,7 @@ type TerminalInputProps = {
   defaultValue?: string
   onBack: () => void
   onForward: () => void
+  inputRef: RefObject<HTMLInputElement>
 }
 
 export const CommandUser = () => {
@@ -34,8 +35,14 @@ export const CommandUser = () => {
   )
 }
 
-export const TerminalInput = ({ onSubmit, disabled, defaultValue, onBack, onForward }: TerminalInputProps) => {
-  const inputRef = useRef<HTMLInputElement>(null)
+export const TerminalInput = ({
+  inputRef,
+  onSubmit,
+  disabled,
+  defaultValue,
+  onBack,
+  onForward
+}: TerminalInputProps) => {
   const [value, setValue] = useState('')
 
   useEffect(() => {

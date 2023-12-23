@@ -9,6 +9,7 @@ import { texts } from '~/constants/texts'
 import { Link } from '@remix-run/react'
 import { AnimatedText } from '~/components/animated-text'
 import { useEffect, useRef } from 'react'
+import { useInView } from 'framer-motion'
 
 export const meta: MetaFunction = () => {
   return [{ title: 'timzolleis.com' }, { name: 'description', content: 'Builing applications of the future.' }]
@@ -81,14 +82,14 @@ function useCommand() {
 }
 
 export default function Index() {
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const scrollToBottom = () => {
-    bottomRef.current?.scrollIntoView()
-  }
+  const inputRef = useRef<HTMLInputElement>(null)
+  const isInView = useInView(inputRef)
   const store = useCommandStore()
   useEffect(() => {
-    scrollToBottom()
-  }, [store.commands])
+    if (!isInView) {
+      inputRef && inputRef.current?.scrollIntoView()
+    }
+  }, [isInView])
 
   const { handle } = useCommand()
   return (
@@ -105,7 +106,7 @@ export default function Index() {
             </div>
             <div className={'space-y-4 py-4'}>
               {element.lines.map((line, index) => (
-                <div key={index} className={'grid grid-cols-3'}>
+                <div key={index} className={'md:grid md:grid-cols-3'}>
                   {line.title && <AnimatedText text={line.title} className={'col-span-2 text-primary'}></AnimatedText>}
                   {line.description && line.description?.startsWith('https://') ? (
                     <Link className={'col-start-3 underline'} to={line.description}>
@@ -125,12 +126,12 @@ export default function Index() {
         ))}
       </div>
       <TerminalInput
+        inputRef={inputRef}
         defaultValue={store.getCurrentSelected()}
         onBack={() => store.decrementIndex()}
         onForward={() => store.incrementIndex()}
         onSubmit={(command) => handle(command)}
       />
-      <div ref={bottomRef}></div>
     </Terminal>
   )
 }
