@@ -3,40 +3,40 @@
 @tailwind utilities;
 
 @layer base {
-    .default {
-        --background: hsl(222.2, 84%, 4.9%);
-        --foreground: hsl(0, 0%, 68%);
-        --primary: hsl(310, 100%, 75%);
-        --primary-foreground: hsl(310, 100%, 75%);
-        --secondary: hsl(197, 75%, 61%);
-        --secondary-foreground: hsl(217.2, 32.6%, 17.5%);
-        --command: hsl(357, 81%, 69%);
-        --border: hsl(217.2, 32.6%, 17.5%);
-        --input: hsl(217.2, 32.6%, 17.5%);
-        --ring: hsl(212.7, 26.8%, 83.9%);
-        --link: hsl(214, 90%, 65%);
-    }
+  .default {
+    --background: hsl(222.2, 84%, 4.9%);
+    --foreground: hsl(0, 0%, 68%);
+    --primary: hsl(310, 100%, 75%);
+    --primary-foreground: hsl(310, 100%, 75%);
+    --secondary: hsl(197, 75%, 61%);
+    --secondary-foreground: hsl(217.2, 32.6%, 17.5%);
+    --command: hsl(357, 81%, 69%);
+    --border: hsl(217.2, 32.6%, 17.5%);
+    --input: hsl(217.2, 32.6%, 17.5%);
+    --ring: hsl(212.7, 26.8%, 83.9%);
+    --link: hsl(214, 90%, 65%);
+  }
 
-    :root {
-        --radius: 0.75rem;
-    }
+  :root {
+    --radius: 0.75rem;
+  }
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 @layer base {
-    * {
-        @apply border-border;
-    }
+  * {
+    @apply border-border;
+  }
 
-    body {
-        @apply bg-background text-foreground;
-    }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

@@ -1,8 +1,9 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react'
 
-import './tailwind.css'
+import tailwindStyles from './tailwind.css'
 
 export const links = () => [
+  { rel: 'stylesheet', href: tailwindStyles },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
