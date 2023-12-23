@@ -5,7 +5,7 @@
 @layer base {
     .default {
         --background: hsl(222.2, 84%, 4.9%);
-        --foreground: 	hsl(0, 0%, 68%);
+        --foreground: hsl(0, 0%, 68%);
         --primary: hsl(310, 100%, 75%);
         --primary-foreground: hsl(310, 100%, 75%);
         --secondary: hsl(197, 75%, 61%);
@@ -20,6 +20,15 @@
     :root {
         --radius: 0.75rem;
     }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
 @layer base {

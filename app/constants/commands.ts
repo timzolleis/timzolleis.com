@@ -1,15 +1,11 @@
-type Command = {
-    name: string;
-    description: string;
-    link?: string;
+export const commands = {
+  ABOUT: 'about',
+  HELP: 'help',
+  PROJECTS: 'projects',
+  SOCIALS: 'socials',
+  CLEAR: 'clear',
+  GITHUB: 'github',
+  TWITTER: 'twitter',
+  RICKROLL: 'rm -rf',
+  INITIAL: 'reset'
 }
-
-export const commands: Command[] = [
-    {
-        name: "about",
-        description: "Learn more about me.",
-    }, {
-        name: "projects",
-        description: "View a list of my projects!",
-    }
-]

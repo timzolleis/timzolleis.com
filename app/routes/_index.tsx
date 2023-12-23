@@ -1,57 +1,134 @@
-import type {MetaFunction} from "@remix-run/node";
-import {Terminal, TerminalInput} from "~/components/terminal";
-import {handleCommand} from "~/utils/command-handler";
-import {ReactNode, useLayoutEffect, useRef, useState} from "react";
-import {redirectTo} from "~/utils/redirectTo";
-import {linkHandler} from "~/utils/redirect-handler";
+import type { MetaFunction } from '@remix-run/node'
+import { CommandUser, Terminal, TerminalInput } from '~/components/terminal'
+import { useCommandStore } from '~/utils/stores/command-store'
+import { useTerminal } from '~/utils/hooks/use-terminal'
+import { commands } from '~/constants/commands'
+import { about, github, help, initial, rickRoll, socials, twitter, unknown } from '~/utils/command-handler'
+import { redirectTo } from '~/utils/redirectTo'
+import { texts } from '~/constants/texts'
+import { Link } from '@remix-run/react'
+import { AnimatedText } from '~/components/animated-text'
+import { useEffect } from 'react'
 
 export const meta: MetaFunction = () => {
-    return [
-        {title: "New Remix App"},
-        {name: "description", content: "Welcome to Remix!"},
-    ];
-};
+  return [{ title: 'New Remix App' }, { name: 'description', content: 'Welcome to Remix!' }]
+}
+
+function useCommand() {
+  const { writeText } = useTerminal()
+  const store = useCommandStore()
+
+  function handle(command: string) {
+    store.resetSelected()
+    switch (command) {
+      case commands.ABOUT: {
+        const lines = about()
+        writeText(command, lines)
+        break
+      }
+      case commands.HELP: {
+        const lines = help()
+        writeText(command, lines)
+        break
+      }
+      case commands.CLEAR: {
+        store.clear()
+        break
+      }
+      case commands.GITHUB: {
+        const lines = github()
+        writeText(command, lines)
+        setTimeout(function () {
+          redirectTo(texts.socials.github.link)
+        }, 1000)
+        break
+      }
+      case commands.TWITTER: {
+        const lines = twitter()
+        writeText(command, lines)
+        setTimeout(() => {
+          redirectTo(texts.socials.twitter.link)
+        }, 1000)
+        break
+      }
+      case commands.RICKROLL: {
+        const lines = rickRoll()
+        writeText(command, lines)
+        setTimeout(() => {
+          redirectTo('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+        }, 1000)
+        break
+      }
+      case commands.SOCIALS: {
+        const lines = socials()
+        writeText(command, lines)
+        break
+      }
+      case commands.INITIAL: {
+        const lines = initial()
+        writeText(command, lines, false)
+        break
+      }
+      default: {
+        const lines = unknown()
+        writeText(command, lines)
+        break
+      }
+    }
+  }
+
+  return { handle }
+}
 
 export default function Index() {
-    const [commandElements, setCommandElements] = useState<ReactNode[]>([]);
-    const [commandHistory, setCommandHistory] = useState<string[]>([]);
-    const switchCommand = (command: string) => {
-        setCommandHistory([...commandHistory, command]);
-        switch (command) {
-            case "clear": {
-                setCommandElements([]);
-                break;
-            }
-            case "github": {
-                return linkHandler.GITHUB();
-            }
-            case "twitter": {
-                return linkHandler.TWITTER();
-            }
-            default: {
-                setCommandElements([...commandElements, handleCommand(command)]);
-                break;
-            }
-        }
-    }
-    const scrollToBottom = () => {
-        window.scrollTo(0, document.body.scrollHeight);
-    }
-    useLayoutEffect(() => {
-        scrollToBottom();
-    }, [commandElements]);
+  const scrollToBottom = () => {
+    window.scrollTo(0, document.body.scrollHeight)
+  }
+  const store = useCommandStore()
+  useEffect(() => {
+    scrollToBottom()
+  }, [store.commands])
 
-
-    return (
-        <Terminal>
-            <div>
-                {commandElements.map((element, index) => (
-                    <div key={index}>
-                        {element}
-                    </div>
-                ))}
+  const { handle } = useCommand()
+  return (
+    <Terminal>
+      <div>
+        <div className={'py-4 text-primary'}>
+          <AnimatedText text={texts.initial.title} />
+        </div>
+        {store.commands.map((element, index) => (
+          <div key={index} className={'max-w-3xl'}>
+            <div className={'flex items-center gap-2'}>
+              <CommandUser />
+              <p className={'text-command'}>{element.command}</p>
             </div>
-            <TerminalInput commandHistory={commandHistory} onSubmit={command => switchCommand(command)}/>
-        </Terminal>
-    );
+            <div className={'space-y-4 py-4'}>
+              {element.lines.map((line, index) => (
+                <div key={index} className={'grid grid-cols-3'}>
+                  {line.title && <AnimatedText text={line.title} className={'col-span-2 text-primary'}></AnimatedText>}
+                  {line.description && line.description?.startsWith('https://') ? (
+                    <Link className={'col-start-3 underline'} to={line.description}>
+                      <AnimatedText text={line.description} />
+                    </Link>
+                  ) : (
+                    line.description && (
+                      <span className={'col-start-3'}>
+                        <AnimatedText text={line.description} />
+                      </span>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <TerminalInput
+        defaultValue={store.getCurrentSelected()}
+        onBack={() => store.decrementIndex()}
+        onForward={() => store.incrementIndex()}
+        onSubmit={(command) => handle(command)}
+      />
+    </Terminal>
+  )
 }
