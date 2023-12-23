@@ -20,7 +20,7 @@ function useCommand() {
 
   function handle(command: string) {
     store.resetSelected()
-    switch (command) {
+    switch (command.toLowerCase()) {
       case commands.ABOUT: {
         const lines = about()
         writeText(command, lines)
