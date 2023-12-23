@@ -8,7 +8,7 @@ import { redirectTo } from '~/utils/redirectTo'
 import { texts } from '~/constants/texts'
 import { Link } from '@remix-run/react'
 import { AnimatedText } from '~/components/animated-text'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export const meta: MetaFunction = () => {
   return [{ title: 'timzolleis.com' }, { name: 'description', content: 'Builing applications of the future.' }]
@@ -81,8 +81,9 @@ function useCommand() {
 }
 
 export default function Index() {
+  const bottomRef = useRef<HTMLDivElement>(null)
   const scrollToBottom = () => {
-    window.scrollTo(0, document.body.scrollHeight)
+    bottomRef.current?.scrollIntoView()
   }
   const store = useCommandStore()
   useEffect(() => {
@@ -129,6 +130,7 @@ export default function Index() {
         onForward={() => store.incrementIndex()}
         onSubmit={(command) => handle(command)}
       />
+      <div ref={bottomRef}></div>
     </Terminal>
   )
 }
