@@ -1,28 +1,40 @@
-# templates/unstable-vite
+# Welcome to Remix!
 
-⚠️ Remix support for Vite is unstable and not recommended for production.
+- 📖 [Remix docs](https://remix.run/docs)
 
-📖 See the [Remix Vite docs][remix-vite-docs] for details on supported features.
+## Development
 
-## Setup
-
-```shellscript
-npx create-remix@latest --template remix-run/remix/templates/unstable-vite
-```
-
-## Run
-
-Spin up the Vite dev server:
+Run the dev server:
 
 ```shellscript
 npm run dev
 ```
 
-Or build your app for production and run it:
+## Deployment
 
-```shellscript
+First, build your app for production:
+
+```sh
 npm run build
-npm run start
 ```
 
-[remix-vite-docs]: https://remix.run/docs/en/main/future/vite
+Then run the app in production mode:
+
+```sh
+npm start
+```
+
+Now you'll need to pick a host to deploy it to.
+
+### DIY
+
+If you're familiar with deploying Node applications, the built-in Remix app server is production-ready.
+
+Make sure to deploy the output of `npm run build`
+
+- `build/server`
+- `build/client`
+
+## Styling
+
+This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever css framework you prefer. See the [Vite docs on css](https://vitejs.dev/guide/features.html#css) for more information.

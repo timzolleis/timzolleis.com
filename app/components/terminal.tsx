@@ -1,4 +1,5 @@
 import { ReactNode, RefObject, useEffect, useState } from 'react'
+import { Form } from '@remix-run/react'
 
 export const Terminal = ({ children }: { children: ReactNode }) => {
   return (
@@ -11,79 +12,6 @@ export const Terminal = ({ children }: { children: ReactNode }) => {
         </div>
         <div className={'p-4 h-full'}>{children}</div>
       </main>
-    </div>
-  )
-}
-
-type TerminalInputProps = {
-  onSubmit: (command: string) => void
-  disabled?: boolean
-  defaultValue?: string
-  onBack: () => void
-  onForward: () => void
-  inputRef: RefObject<HTMLInputElement>
-}
-
-export const CommandUser = () => {
-  return (
-    <div className={'flex items-center'}>
-      <span className={'text-primary'}>guest</span>
-      <span>@</span>
-      <span className={'text-secondary'}>timzolleis.com</span>
-      <span className={'tracking-wider'}>:$~</span>
-    </div>
-  )
-}
-
-export const TerminalInput = ({
-  inputRef,
-  onSubmit,
-  disabled,
-  defaultValue,
-  onBack,
-  onForward
-}: TerminalInputProps) => {
-  const [value, setValue] = useState('')
-
-  useEffect(() => {
-    window.addEventListener('mousedown', () => {
-      inputRef.current?.focus()
-    })
-  }, [])
-
-  useEffect(() => {
-    setValue(defaultValue || '')
-  }, [defaultValue])
-
-  return (
-    <div className={'flex items-center gap-2'}>
-      <CommandUser />
-      <input
-        value={value}
-        ref={inputRef}
-        disabled={disabled}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            onSubmit(value)
-            setValue('')
-          }
-          if (event.key === 'ArrowUp') {
-            event.preventDefault()
-            onForward()
-          }
-          if (event.key === 'ArrowDown') {
-            event.preventDefault()
-            onBack()
-          }
-          if (event.key === 'Escape' || (event.ctrlKey && event.key === 'c')) {
-            setValue('')
-          }
-        }}
-        spellCheck={false}
-        autoComplete={'off'}
-        className={'bg-transparent focus:border-none focus:outline-none w-full text-command caret-foreground'}
-      />
     </div>
   )
 }

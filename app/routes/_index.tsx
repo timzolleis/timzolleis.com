@@ -1,137 +1,169 @@
-import type { MetaFunction } from '@remix-run/node'
-import { CommandUser, Terminal, TerminalInput } from '~/components/terminal'
-import { useCommandStore } from '~/utils/stores/command-store'
-import { useTerminal } from '~/utils/hooks/use-terminal'
-import { commands } from '~/constants/commands'
-import { about, github, help, initial, rickRoll, socials, twitter, unknown } from '~/utils/command-handler'
-import { redirectTo } from '~/utils/redirectTo'
-import { texts } from '~/constants/texts'
-import { Link } from '@remix-run/react'
+import { ClientActionFunctionArgs, useFetcher, useLoaderData } from '@remix-run/react'
 import { AnimatedText } from '~/components/animated-text'
-import { useEffect, useRef } from 'react'
-import { useInView } from 'framer-motion'
+import { texts } from '~/constants/texts'
+import { z } from 'zod'
+import { commands } from '~/constants/commands'
+import { parseWithZod } from '@conform-to/zod'
+import { Terminal } from '~/components/terminal'
+import { useForm } from '@conform-to/react'
+import {
+  handleClearCommandAction,
+  handleCommandHistoryAction,
+  handleKnownCommandAction,
+  handleUnknownCommandAction
+} from '~/actions/command-actions'
+import {
+  addCommandToCommandHistory,
+  getCommandHistory,
+  getCommandResults,
+  getCurrentHistoryIndex,
+  setCurrentHistoryIndex
+} from '~/models/command-history'
+import { useEffect } from 'react'
+import { redirectTo } from '~/utils/redirectTo'
+import { isRedirectResult } from '~/utils/result-types'
 
-export const meta: MetaFunction = () => {
-  return [{ title: 'timzolleis.com' }, { name: 'description', content: 'Builing applications of the future.' }]
+export const commandSchema = z.object({
+  command: z.nativeEnum(commands),
+  intent: z.literal('command')
+})
+
+export const clearInputSchema = z.object({
+  intent: z.literal('clearInput')
+})
+
+export const commandHistorySchema = z.object({
+  intent: z.literal('history'),
+  type: z.enum(['up', 'down'])
+})
+
+export type CommandHistorySchema = z.infer<typeof commandHistorySchema>
+
+export const clientLoader = async () => {
+  const [commandHistory, commandResults, currentHistoryIndex] = await Promise.all([
+    getCommandHistory(),
+    getCommandResults(),
+    getCurrentHistoryIndex()
+  ])
+  return { commandHistory, commandResults, currentHistoryIndex }
 }
 
-function useCommand() {
-  const { writeText } = useTerminal()
-  const store = useCommandStore()
-
-  function handle(command: string) {
-    store.resetSelected()
-    switch (command.toLowerCase()) {
-      case commands.ABOUT: {
-        const lines = about()
-        writeText(command, lines)
-        break
+export const clientAction = async ({ request }: ClientActionFunctionArgs) => {
+  const submission = parseWithZod(await request.formData(), {
+    schema: z.discriminatedUnion('intent', [commandSchema, clearInputSchema, commandHistorySchema])
+  })
+  if (submission.status !== 'success') {
+    return handleUnknownCommandAction(submission)
+  }
+  switch (submission.value.intent) {
+    case 'command': {
+      const { command } = submission.value
+      await addCommandToCommandHistory(command)
+      await setCurrentHistoryIndex(null)
+      // Handle clear command
+      if (command === 'clear') {
+        return await handleClearCommandAction(submission)
       }
-      case commands.HELP: {
-        const lines = help()
-        writeText(command, lines)
-        break
-      }
-      case commands.CLEAR: {
-        store.clear()
-        break
-      }
-      case commands.GITHUB: {
-        const lines = github()
-        writeText(command, lines)
-        setTimeout(function () {
-          redirectTo(texts.socials.github.link)
-        }, 1000)
-        break
-      }
-      case commands.TWITTER: {
-        const lines = twitter()
-        writeText(command, lines)
-        setTimeout(() => {
-          redirectTo(texts.socials.twitter.link)
-        }, 1000)
-        break
-      }
-      case commands.RICKROLL: {
-        const lines = rickRoll()
-        writeText(command, lines)
-        setTimeout(() => {
-          redirectTo('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-        }, 1000)
-        break
-      }
-      case commands.SOCIALS: {
-        const lines = socials()
-        writeText(command, lines)
-        break
-      }
-      case commands.INITIAL: {
-        const lines = initial()
-        writeText(command, lines, false)
-        break
-      }
-      default: {
-        const lines = unknown()
-        writeText(command, lines)
-        break
-      }
+      return handleKnownCommandAction(command, submission)
+    }
+    case 'history': {
+      return handleCommandHistoryAction(submission, submission.value)
+    }
+    case 'clearInput': {
+      await setCurrentHistoryIndex(null)
+      return { result: submission.reply({ resetForm: true }) }
     }
   }
-
-  return { handle }
 }
 
 export default function Index() {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const isInView = useInView(inputRef)
-  const store = useCommandStore()
-  useEffect(() => {
-    if (!isInView) {
-      inputRef && inputRef.current?.scrollIntoView()
-    }
-  }, [isInView])
+  const { commandHistory, commandResults, currentHistoryIndex } = useLoaderData<typeof clientLoader>()
+  const fetcher = useFetcher<typeof clientAction>()
+  const defaultCommand = currentHistoryIndex !== null ? commandHistory[currentHistoryIndex] : undefined
 
-  const { handle } = useCommand()
+  const [form, fields] = useForm({
+    lastResult: fetcher.state === 'idle' ? fetcher.data?.result : null,
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: commandSchema })
+    }
+  })
+
+  useEffect(() => {
+    if (fetcher.data && isRedirectResult(fetcher.data)) {
+      redirectTo(fetcher.data.url)
+    }
+  }, [fetcher.data])
+
   return (
     <Terminal>
       <div>
-        <div className={'py-4 text-primary'}>
+        <div className='py-4 text-primary'>
           <AnimatedText text={texts.initial.title} />
         </div>
-        {store.commands.map((element, index) => (
-          <div key={index} className={'max-w-3xl'}>
-            <div className={'flex items-center gap-2'}>
-              <CommandUser />
-              <p className={'text-command'}>{element.command}</p>
-            </div>
-            <div className={'space-y-4 py-4'}>
-              {element.lines.map((line, index) => (
-                <div key={index} className={'md:grid md:grid-cols-3'}>
-                  {line.title && <AnimatedText text={line.title} className={'col-span-2 text-primary'}></AnimatedText>}
-                  {line.description && line.description?.startsWith('https://') ? (
-                    <Link className={'col-start-3 underline'} to={line.description}>
-                      <AnimatedText text={line.description} />
-                    </Link>
-                  ) : (
-                    line.description && (
-                      <span className={'col-start-3'}>
-                        <AnimatedText text={line.description} />
-                      </span>
-                    )
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
       </div>
-      <TerminalInput
-        inputRef={inputRef}
-        defaultValue={store.getCurrentSelected()}
-        onBack={() => store.decrementIndex()}
-        onForward={() => store.incrementIndex()}
-        onSubmit={(command) => handle(command)}
-      />
+      {commandHistory.map((command, index) => {
+        const commandResult = commandResults?.[index]
+        return (
+          <div key={index}>
+            <div className='flex items-center gap-2'>
+              <CommandUser />
+              <p>{command}</p>
+            </div>
+            <div>{commandResult?.lines.map((line, lineIndex) => <p key={lineIndex}>{line}</p>)}</div>
+          </div>
+        )
+      })}
+      <div className='flex items-center gap-2'>
+        <CommandUser />
+        <fetcher.Form method='post' id={form.id} key={form.key}>
+          <input type='hidden' name={fields.intent.name} value={'command'} />
+          <input
+            defaultValue={defaultCommand}
+            name={fields.command.name}
+            onKeyDown={(event) => {
+              switch (event.key) {
+                case 'ArrowUp': {
+                  event.preventDefault()
+                  fetcher.submit({ intent: 'history', type: 'up' }, { method: 'post' })
+                  break
+                }
+                case 'ArrowDown': {
+                  event.preventDefault()
+                  fetcher.submit({ intent: 'history', type: 'down' }, { method: 'post' })
+                  break
+                }
+                case 'Escape': {
+                  event.preventDefault()
+                  fetcher.submit({ intent: 'clearInput' }, { method: 'post' })
+                  break
+                }
+                case 'c': {
+                  if (event.ctrlKey) {
+                    event.preventDefault()
+                    fetcher.submit({ intent: 'clearInput' }, { method: 'post' })
+                    break
+                  }
+                }
+              }
+            }}
+            spellCheck={false}
+            autoFocus
+            autoComplete='off'
+            className='bg-transparent focus:border-none focus:outline-none w-full text-command caret-foreground'
+          />
+        </fetcher.Form>
+      </div>
     </Terminal>
+  )
+}
+
+export const CommandUser = () => {
+  return (
+    <div className='flex items-center'>
+      <span className='text-primary'>guest</span>
+      <span>@</span>
+      <span className='text-secondary'>timzolleis.com</span>
+      <span className='tracking-wider'>:$~</span>
+    </div>
   )
 }

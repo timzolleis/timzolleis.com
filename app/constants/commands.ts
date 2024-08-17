@@ -2,10 +2,10 @@ export const commands = {
   ABOUT: 'about',
   HELP: 'help',
   PROJECTS: 'projects',
-  SOCIALS: 'socials',
   CLEAR: 'clear',
   GITHUB: 'github',
   TWITTER: 'twitter',
-  RICKROLL: 'rm -rf',
-  INITIAL: 'reset'
+  RICKROLL: 'rm -rf'
 }
+
+export type Command = (typeof commands)[keyof typeof commands]
